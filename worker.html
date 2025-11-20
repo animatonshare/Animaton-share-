@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مرد کلنگ‌زن</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f0f0f0;
+      margin: 0;
+    }
+
+    .miner {
+      position: relative;
+      width: 100px;
+      height: 150px;
+    }
+
+    @media screen and (min-width: 100px) and (max-width: 500px) {
+      .miner {
+        top: -200px;
+        left: 70%;
+      }
+
+    }
+
+    /* بدن */
+    .body {
+      width: 50px;
+      height: 80px;
+      background: #555;
+      position: absolute;
+      top: 60px;
+      left: -5px;
+      border-radius: 10px;
+    }
+
+    .pickaxe {
+      width: 10px;
+      height: 80px;
+      background: #8b4513;
+      position: absolute;
+      top: 30px;
+      left: -20px;
+      transform-origin: right;
+      animation: swing 1s infinite ease-in-out;
+    }
+
+    /* انیمیشن کلنگ */
+    @keyframes swing {
+      0% {
+        transform: rotate(-45deg);
+      }
+
+      50% {
+        transform: rotate(-10deg);
+      }
+
+      88% {
+        transform: rotate(-7deg);
+
+      }
+
+      100% {
+        transform: rotate(-4deg);
+
+      }
+    }
+
+    /* سر */
+    .head {
+      width: 40px;
+      height: 40px;
+      background: #f5c6a5;
+      position: absolute;
+      top: 10px;
+      left: -1px;
+      border-radius: 50%;
+    }
+
+    /* کلنگ */
+
+
+    .pickaxe::before {
+      content: '';
+      width: 60px;
+      height: 10px;
+      background: #444;
+      position: absolute;
+      top: 0;
+      left: -50px;
+      border-radius: 5px;
+    }
+
+    .fingor {
+      width: 50px;
+      height: 30px;
+      border-radius: 10px;
+      background-color: #444;
+      position: absolute;
+      top: 25px;
+      left: -5px;
+    }
+
+    .logo {
+      width: 50px;
+      height: 50px;
+      border-radius: 5px;
+      position: absolute;
+      right: 150px;
+      top: 80px;
+
+    }
+
+    @media screen and (min-width: 100px) and (max-width: 500px) {
+      .logo {
+        top: 85px;
+        left: -90px;
+      }
+    }
+
+      h1,
+      p {
+        color: #000;
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+      }
+  </style>
+</head>
+
+<body>
+  <div class="miner">
+    <div>
+      <div class="head"></div>
+      <div class="body">
+        <div class="fingor"></div>
+      </div>
+    </div>
+    <img src="3.png" class="logo">
+    <div class="pickaxe"></div>
+  </div>
+  <br>
+  <center>
+    <h1>
+      کارگران در حال کنده کاری هستند
+    </h1>
+    <br>
+    <p>
+      برخی ویزگی بتا در حال گسترش هست تا ویزگی های بهتر تولید شود<br>در بتا ممکن است چیزی ثابت نباشند <br> در نسخه ها ی
+      بعد سایت گسترش میابد و بخش های بیشتری ساخته میشود
+    </p>
+  </center>
+</body>
+
+</html>

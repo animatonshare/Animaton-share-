@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="fa">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Flappy Bird با مسیر امن و مسیر اتش نارنجی</title>
+<style>
+html, body {height:100%; margin:0; font-family:Tahoma, Arial, Helvetica, sans-serif; background: linear-gradient(#70c5ce,#5ec2a0); display:flex; align-items:center; justify-content:center;}
+canvas {background: linear-gradient(#70c5ce,#5ec2a0); box-shadow: 0 8px 30px rgba(0,0,0,0.25); border-radius:8px;}
+.ui {position:fixed; left:20px; top:20px; color:#fff; text-shadow:0 1px 0 rgba(0,0,0,0.6);}
+.hint {position:fixed; right:20px; top:20px; color:#fff; font-size:14px;}
+</style>
+</head>
+<body>
+<div class="ui">امتیاز: <span id="score">0</span></div>
+<div class="hint">برای پریدن کلیک کنید یا اسپیس را فشار دهید</div>
+<canvas id="game" width="480" height="640"></canvas>
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+let W = canvas.width, H = canvas.height;
+
+const birdCount = 7;
+let birds = [];
+let pipes = [];
+let arrows = [];
+let frame = 0;
+let gap = 180;
+let spacing = 180;
+let speed = 2.4;
+let score = 0;
+let running = true;
+let started = false;
+
+class Bird {
+  constructor(isPlayer, delay){
+    this.x = 80; this.y = H/2; this.r = 16; this.vy = 0;
+    this.gravity = 0.6; this.jump = -10; this.rotation = 0;
+    this.isPlayer = isPlayer; this.alive = true; this.delay = delay;
+    this.frameCount = 0;
+  }
+  flap() { this.vy = this.jump; }
+  update(){
+    if(!this.alive) return;
+    this.frameCount++;
+    if(this.frameCount < this.delay) return;
+    this.vy += this.gravity;
+    this.y += this.vy;
+    this.rotation = Math.max(-0.6, Math.min(1.2, this.vy/15));
+
+    if(!this.isPlayer){
+      let closest = null; let minDist = Infinity;
+      for(let p of pipes){
+        let dist = p.x - this.x;
+        if(dist > 0 && dist < minDist){ minDist = dist; closest = p; }
+      }
+      if(closest){
+        let targetY = closest.top1 + gap/2;
+        if(this.y > targetY) this.flap();
+      }
+    }
+    if(this.y + this.r > H-40 || this.y - this.r < 0) this.alive = false;
+  }
+  draw(){
+    if(!this.alive) return;
+    if(this.frameCount < this.delay) return;
+    ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.rotation);
+    ctx.beginPath(); ctx.arc(0,0,this.r,0,Math.PI*2);
+    ctx.fillStyle = this.isPlayer ? 'gold' : 'yellow'; ctx.fill(); ctx.restore();
+  }
+}
+
+class Arrow {
+  constructor(x,y,vx,vy){ this.x=x; this.y=y; this.vx=vx; this.vy=vy; this.size=8; this.alive=true; }
+  update(){ this.x+=this.vx; this.y+=this.vy; if(this.x>W||this.x<0||this.y<0||this.y>H)this.alive=false; }
+  draw(){ ctx.save(); ctx.translate(this.x,this.y); let angle=Math.atan2(this.vy,this.vx); ctx.rotate(angle);
+    ctx.fillStyle='brown'; ctx.beginPath(); ctx.moveTo(-this.size,-this.size/2); ctx.lineTo(this.size,0); ctx.lineTo(-this.size,this.size/2); ctx.closePath(); ctx.fill(); ctx.restore(); }
+}
+
+function reset(){
+  birds=[]; for(let i=0;i<birdCount;i++) birds.push(new Bird(i===0,i*15));
+  pipes=[]; arrows=[]; frame=0; score=0; started=false; running=true;
+}
+
+function spawnPipe(){
+  const min=80,max=H-gap-80;
+  const top1=Math.floor(Math.random()*(max-min)+min);
+  const top2=Math.floor(Math.random()*(max-min)+min);
+  let pathFire = null;
+  // فقط اگر لوله دو راه برای رد شدن دارد، یکی از مسیرها اتش شود
+  if(Math.random() < 0.5){
+    pathFire = 'orange';
+  } else if(Math.random() < 0.3){
+    pathFire = 'turquoise';
+  }
+  pipes.push({x:W+10, top1, top2, pathFire});
+}
+
+function spawnArrow(){
+  const side=Math.floor(Math.random()*4);
+  let x,y,vx=0,vy=0;
+  switch(side){case 0:x=Math.random()*W;y=0;vy=3;break;
+    case 1:x=Math.random()*W;y=H;vy=-3;break;
+    case 2:x=0;y=Math.random()*H;vx=3;break;
+    case 3:x=W;y=Math.random()*H;vx=-3;break;}
+  arrows.push(new Arrow(x,y,vx,vy));
+}
+
+function update(){
+  if(!running) return; frame++;
+  for(let b of birds) b.update();
+  if(frame % Math.floor(spacing / speed)===0) spawnPipe();
+  if(frame % 150===0) spawnArrow();
+  for(let i=pipes.length-1;i>=0;i--){ pipes[i].x-=speed; if(pipes[i].x<-100)pipes.splice(i,1); }
+  for(let i=arrows.length-1;i>=0;i--){ let a=arrows[i]; a.update(); for(let b of birds){
+    if(!b.alive) continue; const bRect={x:b.x-b.r,y:b.y-b.r,w:b.r*2,h:b.r*2};
+    const aRect={x:a.x-a.size,y:a.y-a.size/2,w:a.size*2,h:a.size};
+    if(rectsIntersect(bRect,aRect)){b.alive=false;a.alive=false;}}
+    if(!a.alive) arrows.splice(i,1);
+  }
+
+  for(let b of birds){ if(!b.alive) continue;
+    for(let p of pipes){ const pipeW=52;
+      const bRect={x:b.x-b.r,y:b.y-b.r,w:b.r*2,h:b.r*2};
+      const topRect={x:p.x,y:0,w:pipeW,h:p.top1};
+      const bottomRect={x:p.x,y:p.top1+gap,w:pipeW,h:p.top2};
+      const pathRect={x:p.x,y:p.top1,w:pipeW,h:gap};
+      // حذف پرنده در برخورد با لوله سبز یا مسیر اتش نارنجی
+      if(rectsIntersect(bRect, topRect) || rectsIntersect(bRect, bottomRect) || (p.pathFire==='orange' && rectsIntersect(bRect,pathRect))){
+        b.alive=false;
+      }
+    }
+  }
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#ded895'; ctx.fillRect(0,H-40,W,40);
+  for(let p of pipes){
+    ctx.fillStyle='green'; ctx.fillRect(p.x,0,52,p.top1);
+    ctx.fillRect(p.x,p.top1+gap,52,p.top2);
+    if(p.pathFire==='orange'){ ctx.fillStyle='orange'; ctx.fillRect(p.x,p.top1,52,gap); }
+    else if(p.pathFire==='turquoise'){ ctx.fillStyle='turquoise'; ctx.fillRect(p.x,p.top1,52,gap); }
+  }
+  for(let a of arrows) a.draw();
+  for(let b of birds) b.draw();
+}
+
+function loop(){ update(); draw(); requestAnimationFrame(loop); }
+function flap(){ if(!started) started=true; if(!running){ reset(); return; } birds[0].flap(); }
+function rectsIntersect(a,b){return a.x<b.x+b.w && a.x+a.w>b.x && a.y<b.y+b.h && a.y+a.h>b.y;}
+window.addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault(); flap();}});
+canvas.addEventListener('mousedown',flap);
+canvas.addEventListener('touchstart',e=>{e.preventDefault(); flap();});
+reset(); loop();
+</script>
+</body>
+</html>
